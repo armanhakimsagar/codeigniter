@@ -1368,102 +1368,155 @@ _________________________________________________
 -> AJAX
 
 
-
-
-Controller :
-
-	public function method()
-	{
-
-			$data['database_fieldname'] = $this->input->post('form_fieldname');
-
-
-			$re=$this->db->insert("tablename",$data);
-
-			if($re)
-			{
-				echo "submitted succesfully";
-
-			}
-			else
-			{
-				?>
-				<script> alert("not insert");</script>
-				<?php
-			}
-	}
-	
-
-	
-	
-View :
-
-<span id="answer"></span> 
-
-<form method="post" id="form" action="">
-
-	<input type="text" id="name" name="name">
-	
-	<input type="submit" id="submit" name="submit" value="submit">
-	
-</form>
-
-
-
-Script :
+** comment.php :
 
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
-    <script type="text/javascript">
-	
-        $(document).ready(function (e) {
-		
-            $("#form").on('submit',(function(e) {
-			
-                var name = $("#name").val();
-				
-        		e.preventDefault();     //Clicking on a "Submit" button, prevent it from submitting a form
-				
-                $.ajax({
-				
-                    url: "<?php echo base_url(); ?>controller/method",
-					
-                    type: "POST",
-					
-                    data:  new FormData(this),
-					
-                    contentType: false, // When sending data to the server, in server use this content type: "application/json",
-                    
-					cache: false,
-                    
-					processData:false, // default: true for javascripts object. set false for json
-                    
-					success: function(html)
-                    {
-                        $("#feed_m").after(html);
-                            document.getElementById('name').value='';
-                        }  
-                    });
-					
-        		}));
-        });
-		
-    </script>
+<script type="text/javascript">
     
+function post()
+{
+  var comment = document.getElementById("comment").value;
+  var name = document.getElementById("username").value;
+  if(comment && name)
+  {
+    $.ajax
+    ({
+      type: 'post',
+      url: 'commentController/insert',
+      data: 
+      {
+         user_comm:comment,
+	       user_name:name
+      },
+      success: function (response) 
+      {
+	    document.getElementById("all_comments").innerHTML=response+document.getElementById("all_comments").innerHTML;
+	    document.getElementById("comment").value="";
+            document.getElementById("username").value="";
+  
+      }
+    });
+  }
+  
+  return false;
+}
+</script>
+
+
+
+  <form method='post' onSubmit="return post();">
+  <textarea id="comment" placeholder="Write Your Comment Here....."></textarea>
+  <br>
+  <input type="text" id="username" placeholder="Your Name">
+  <br>
+  <input type="submit" value="Post Comment">
+  </form>
+
+
+
+  <div id="all_comments">
+      
+      
+  <!-- onload view comments -->
+
+
+      
+  <?php
+
+    $query = $this->db->query('select * from comments');
+
+    foreach ($query->result() as $row){
+  
+        $name= $row->name;
+        $comment=$row->comment;
+        $time=$row->post_time;
     
-    Ajax View IN Controller :
+      }
+
+   ?>
+
+   <!-- onload view comments -->
+   
+    <div class="comment_div"> 
+      <p class="name">Posted By:<?php echo $name;?></p>
+      <p class="comment"><?php echo $comment;?></p> 
+      <p class="time"><?php echo $time;?></p>
+    </div>
+      
+
+      
+  </div>
+
+
+
+
+
+
+** commentController :
+
+
+  public function insert(){
+
+     $this->load->view('post_comment.php');
+
+  }
+
+
+
+
+
+** post_comments.php :
+
+
+
+<?php
+
+
+if(isset($_POST['user_comm']) && isset($_POST['user_name'])){
+
+  $name = $_POST['user_name'];
+  $comment = $_POST['user_comm'];
+
+
+  $attr = array(
+
+     'name' => $this->input->post('user_name'),
+     'comment' => $this->input->post('user_comm')
+
+  );
+
+
+  $id = $this->db->insert('comments',$attr);
+
     
+  // after insert select all data by mysqli insert id, it will hold by response param
     
-    $re=$this->db->insert("insert_ajax",$data);
+  $id =$this->db->insert_id();
 
-	if($re)
-	{
-		$query = $this->db->get("insert_ajax");
 
-		foreach ($query->result() as $row){ ?>
+  $q = $this->db->query("select name,comment,post_time from comments where name='$name' and comment='$comment' and id='$id'");
 
-		<div style="height:30px;width:200px;float:left"> <?php echo $row->name; ?> </div>
 
-		<?php	}  ?>
-	}
+   foreach ($q->result() as $row){
+  
+      $name=$row->name;
+      $comment=$row->comment;
+      $time=$row->post_time;
+    
+   }
+
+  ?>
+
+
+   <div class="comment_div"> 
+   
+    <p class="name">Posted By:<?php echo $name; ?></p>
+    <p class="comment"><?php echo $comment; ?></p>	
+    <p class="time"><?php echo $time; ?></p>
+   
+   </div>
+
+
+<?php } ?>
