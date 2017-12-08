@@ -1367,6 +1367,8 @@ _________________________________________________
 
 -> AJAX
 
+Table -> comments | fields -> post,commnets,post_time
+
 
 ** comment.php :
 
@@ -1388,7 +1390,7 @@ function post()
       data: 
       {
          user_comm:comment,
-	       user_name:name
+	 user_name:name
       },
       success: function (response) 
       {
